@@ -41,7 +41,7 @@ Participants can fill out a registration form that directly pushes data into a c
 ## 👨‍💻 Developed & Designed by
 
 ### **Darshan Patil**
-`Software Developer | Back-End Developer | Ex-AI Developer`
+`Software Developer | Back-End Developer | AI Developer`
 
 📧 [darshanpatil8219@gmail.com](mailto:darshanpatil8219@gmail.com)  
 📱 9421919984  
