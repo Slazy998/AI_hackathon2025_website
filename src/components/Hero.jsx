@@ -100,7 +100,11 @@ const Hero = () => {
         className="relative z-10 h-dvh w-screen overflow-hidden rounded-lg bg-blue-75"
       >
         <div>
-          <div className="mask-clip-path absolute-center absolute z-50 size-64 cursor-pointer overflow-hidden rounded-lg">
+          {/* Mobile-optimized video preview - smaller and positioned to avoid button overlap */}
+          <div className="mask-clip-path absolute z-50 cursor-pointer overflow-hidden 
+                          size-40 top-1/2 right-8 -translate-y-1/2 rounded-full
+                          sm:size-48 sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:rounded-lg
+                          md:size-64">
             <VideoPreview>
               <div
                 onClick={handleMiniVdClick}
@@ -112,7 +116,7 @@ const Hero = () => {
                   loop
                   muted
                   id="current-video"
-                  className="size-64 origin-center scale-150 object-cover object-center"
+                  className="size-full origin-center scale-150 object-cover object-center rounded-full sm:rounded-lg"
                   onLoadedData={handleVideoLoad}
                 />
               </div>
@@ -157,7 +161,7 @@ const Hero = () => {
               Enter the AI Arena <br /> Unleash Social Impact
             </p>
 
-            <a href="#register" className="inline-block">
+            <a href="#register" className="inline-block relative z-50">
               <Button
                 id="register-now"
                 title="Register Now"
