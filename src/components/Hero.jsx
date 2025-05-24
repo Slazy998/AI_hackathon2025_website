@@ -4,7 +4,7 @@ import { ScrollTrigger } from "gsap/all";
 import { TiLocationArrow } from "react-icons/ti";
 import { FiChevronDown } from "react-icons/fi";
 import { useEffect, useRef, useState } from "react";
-
+import { FiChevronDown } from "react-icons/fi";
 import Button from "./Button";
 import VideoPreview from "./VideoPreview";
 
@@ -92,6 +92,25 @@ const Hero = () => {
             <div className="three-body__dot"></div>
             <div className="three-body__dot"></div>
             <div className="three-body__dot"></div>
+          </div>
+<div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center">
+            <div className="animate-bounce">
+              <FiChevronDown className="text-black/100 text-1xl animate-bounce" style={{ animationDelay: '0.5s' }} />
+              <FiChevronDown className="text-black/100 text-2xl animate-bounce" style={{ animationDelay: '0.5s' }} />
+            </div>
+            <p className="text-black/100 text-xs mt-2 font-general uppercase tracking-wider animate-pulse">
+              <b>S</b>
+              <b>C</b>
+              <b>R</b>
+              <b>O</b>
+              <b>L</b>
+              <b>L</b>
+              <b> </b>
+              <b>D</b>
+              <b>O</b>
+              <b>W</b>
+              <b>N</b>
+            </p>
           </div>
         </div>
       )}
