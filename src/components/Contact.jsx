@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AnimatedTitle from "./AnimatedTitle";
 import Button from "./Button";
+import { FaLinkedin, FaYoutube, FaInstagram } from "react-icons/fa";
 
 const ImageClipBox = ({ src, clipClass }) => (
   <div className={clipClass}>
@@ -20,58 +21,68 @@ const Contact = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState(''); // 'success' or 'error'
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState(""); // 'success' or 'error'
 
   // Google Apps Script web app URL
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzh6CI81wQntNR6snBZxiYjcQTgr98ENMo-vzByupGCPgAM61UjHEadHTTv179Xae1z/exec';
+  const SCRIPT_URL =
+    "https://script.google.com/macros/s/AKfycbzh6CI81wQntNR6snBZxiYjcQTgr98ENMo-vzByupGCPgAM61UjHEadHTTv179Xae1z/exec";
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setMessage('');
-    setMessageType('');
+    setMessage("");
+    setMessageType("");
 
     try {
       // Validate required fields
-      const requiredFields = ['teamName', 'leadName', 'email', 'phone', 'teamSize', 'experience'];
-      const missingFields = requiredFields.filter(field => !formData[field]?.trim());
-      
+      const requiredFields = [
+        "teamName",
+        "leadName",
+        "email",
+        "phone",
+        "teamSize",
+        "experience",
+      ];
+      const missingFields = requiredFields.filter(
+        (field) => !formData[field]?.trim()
+      );
+
       if (missingFields.length > 0) {
-        throw new Error(`Please fill in: ${missingFields.join(', ')}`);
+        throw new Error(`Please fill in: ${missingFields.join(", ")}`);
       }
 
       // Email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        throw new Error('Please enter a valid email address');
+        throw new Error("Please enter a valid email address");
       }
 
-      console.log('Submitting data:', formData); // Debug log
+      console.log("Submitting data:", formData); // Debug log
 
       // Try POST request first
       const response = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
+        method: "POST",
+        mode: "no-cors",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       // Since we're using no-cors, we can't read the response
       // If no error is thrown, assume success
-      setMessage('✅ Team registered successfully!');
-      setMessageType('success');
-      
+      setMessage("✅ Team registered successfully!");
+      setMessageType("success");
+
       // Reset form on success
       setFormData({
         teamName: "",
@@ -82,32 +93,31 @@ const Contact = () => {
         experience: "",
         skills: "",
       });
-
     } catch (error) {
-      console.error('Submission error:', error);
-      
+      console.error("Submission error:", error);
+
       // If POST fails, try GET method as fallback
       try {
-        console.log('POST failed, trying GET method...');
-        
+        console.log("POST failed, trying GET method...");
+
         const params = new URLSearchParams({
           teamName: formData.teamName,
           leadName: formData.leadName,
           email: formData.email,
-          phone: formData.phone || '',
+          phone: formData.phone || "",
           teamSize: formData.teamSize,
-          experience: formData.experience || '',
-          skills: formData.skills || ''
+          experience: formData.experience || "",
+          skills: formData.skills || "",
         });
 
         const getResponse = await fetch(`${SCRIPT_URL}?${params.toString()}`, {
-          method: 'GET',
-          mode: 'no-cors'
+          method: "GET",
+          mode: "no-cors",
         });
 
-        setMessage('✅ Team registered successfully!');
-        setMessageType('success');
-        
+        setMessage("✅ Team registered successfully!");
+        setMessageType("success");
+
         // Reset form on success
         setFormData({
           teamName: "",
@@ -118,11 +128,12 @@ const Contact = () => {
           experience: "",
           skills: "",
         });
-
       } catch (fallbackError) {
-        console.error('Both POST and GET failed:', fallbackError);
-        setMessage('❌ Registration failed. Please check your internet connection and try again.');
-        setMessageType('error');
+        console.error("Both POST and GET failed:", fallbackError);
+        setMessage(
+          "❌ Registration failed. Please check your internet connection and try again."
+        );
+        setMessageType("error");
       }
     } finally {
       setIsSubmitting(false);
@@ -286,11 +297,13 @@ const Contact = () => {
 
               {/* Success/Error Message */}
               {message && (
-                <div className={`p-4 rounded-lg text-center ${
-                  messageType === 'success' 
-                    ? 'bg-green-900/50 text-green-300 border border-green-400/30' 
-                    : 'bg-red-900/50 text-red-300 border border-red-400/30'
-                }`}>
+                <div
+                  className={`p-4 rounded-lg text-center ${
+                    messageType === "success"
+                      ? "bg-green-900/50 text-green-300 border border-green-400/30"
+                      : "bg-red-900/50 text-red-300 border border-red-400/30"
+                  }`}
+                >
                   {message}
                 </div>
               )}
@@ -300,7 +313,7 @@ const Contact = () => {
                   type="submit"
                   title={isSubmitting ? "Registering..." : "Register Team"}
                   containerClass={`mt-6 cursor-pointer bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 px-8 py-3 rounded-full font-bold text-white transition-all duration-300 transform hover:scale-105 ${
-                    isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                    isSubmitting ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 />
               </div>
@@ -308,22 +321,32 @@ const Contact = () => {
           </div>
 
           {/* Contact Information */}
+
           <div className="mt-12 text-center">
             <p className="text-cyan-400 mb-4 text-lg font-semibold">
               Need Help? Contact Us
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-cyan-400 rounded-full"></span>
-                <span>📧 themotherglobalfoundation</span>
+            <div className="flex flex-wrap justify-center gap-6 text-sm">
+              {/* Instagram Section */}
+              <div className="flex flex-col items-center bg-grey-50 p-4 rounded-lg shadow-md">
+                <span ><FaInstagram color="purple"/></span>
+                <p className="text-cyan-500 font-medium">Instagram</p>
+                <span>@dr.sindhutaisapkal.maai</span>
+                <span>@themotherglobalfoundation</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                <span>🌐 sindhutaisapkal.org</span>
+
+              {/* YouTube Section */}
+              <div className="flex flex-col items-center bg-grey-50 p-4 rounded-lg shadow-md">
+                <span ><FaYoutube color="red"/></span>
+                <p className="text-purple-500 font-medium">YouTube</p>
+                <span>@themotherglobalfoundation</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
-                <span>📞 9881337914</span>
+
+              {/* LinkedIn Section */}
+              <div className="flex flex-col items-center bg-hrey-50 p-4 rounded-lg shadow-md">
+                <span ><FaLinkedin color="darkblue"/></span>
+                <p className="text-orange-500 font-medium">LinkedIn</p>
+                <span>The Mother Global Foundation on LinkedIn</span>
               </div>
             </div>
           </div>
