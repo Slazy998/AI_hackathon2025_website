@@ -55,23 +55,63 @@ const Contact = () => {
       }
 
       // POST to both scripts
-      const postPromises = SCRIPTS.map(url => 
-        fetch(url, {
+      const submitToScript = async (url) => {
+      try {
+        // Try POST first
+        const postResponse = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData)
-        })
-      );
+        });
 
-      const postResponses = await Promise.all(postPromises);
-      const allPostsSuccessful = postResponses.every(res => res.ok);
-      
-      if (!allPostsSuccessful) {
-        throw new Error("Some POST submissions failed");
+        if (!postResponse.ok) throw new Error(`POST failed for ${url}`);
+        return { success: true, url };
+      } catch (postError) {
+        console.log(`POST failed for ${url}, trying GET...`);
+        
+        // Fallback to GET
+        const params = new URLSearchParams(formData);
+        const getResponse = await fetch(`${url}?${params.toString()}`, {
+          method: "GET"
+        });
+
+        if (!getResponse.ok) throw new Error(`GET failed for ${url}`);
+        return { success: true, url };
       }
+    };
 
-      setMessage("✅ Team registered successfully!");
+    // Submit to both scripts independently
+    const results = await Promise.allSettled(SCRIPTS.map(submitToScript));
+
+    // Analyze results
+    const successfulSubmissions = results.filter(
+      result => result.status === "fulfilled"
+    );
+
+    const failedSubmissions = results.filter(
+      result => result.status === "rejected"
+    );
+
+    // Build status message
+    let statusMessage = "";
+    if (successfulSubmissions.length === SCRIPTS.length) {
+      statusMessage = "✅ Registration successful to all systems!";
       setMessageType("success");
+    } else if (successfulSubmissions.length > 0) {
+      statusMessage = `⚠️ Partial success: Registered to ${
+        successfulSubmissions.length
+      }/${SCRIPTS.length} systems. (Failed: ${failedSubmissions
+        .map((_, i) => `System ${i + 1}`)
+        .join(", ")})`;
+      setMessageType("warning");
+    } else {
+      throw new Error("All submission attempts failed");
+    }
+
+    setMessage(statusMessage);
+    
+    // Reset form if any submission succeeded
+    if (successfulSubmissions.length > 0) {
       setFormData({
         teamName: "",
         leadName: "",
@@ -81,39 +121,22 @@ const Contact = () => {
         experience: "",
         skills: "",
       });
-
-    } catch (error) {
-      console.error("Primary submission error:", error);
-      
-      try {
-        // Fallback to GET
-        const params = new URLSearchParams(formData);
-        const getPromises = SCRIPTS.map(url => 
-          fetch(`${url}?${params.toString()}`, { method: "GET" })
-        );
-
-        await Promise.all(getPromises);
-        setMessage("✅ Team registered successfully!");
-        setMessageType("success");
-        setFormData({
-          teamName: "",
-          leadName: "",
-          email: "",
-          phone: "",
-          teamSize: "",
-          experience: "",
-          skills: "",
-        });
-
-      } catch (fallbackError) {
-        console.error("Fallback submission failed:", fallbackError);
-        setMessage("❌ Registration failed. Please try again later.");
-        setMessageType("error");
-      }
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+
+    // Log detailed results
+    console.log("Submission Report:", {
+      successful: successfulSubmissions.map(r => r.value?.url),
+      failed: failedSubmissions.map(r => r.reason?.message)
+    });
+
+  } catch (error) {
+    console.error("Final submission error:", error);
+    setMessage("❌ Critical failure: Could not reach any registration systems");
+    setMessageType("error");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div id="register" className="my-20 min-h-96 w-screen px-10">
