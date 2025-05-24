@@ -98,7 +98,7 @@ const Hero = () => {
         </div>
         <FiChevronDown className="text-black/100 text-1xl animate-bounce" style={{ animationDelay: '0.5s' }} />
         <FiChevronDown className="text-black/100 text-2xl animate-bounce" style={{ animationDelay: '0.5s' }} />
-        <p className="text-white/100 text-xs mt-2 font-general uppercase tracking-wider animate-pulse">
+        <p className="text-black/100 text-xs mt-2 font-general uppercase tracking-wider animate-pulse">
           <b>S</b>
           <b>C</b>
           <b>R</b>
