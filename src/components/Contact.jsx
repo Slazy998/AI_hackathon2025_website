@@ -24,9 +24,12 @@ const Contact = () => {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState(""); // 'success' or 'error'
 
-  // Google Apps Script web app URL
-  const SCRIPT_URL =
+  // Google Apps Script web app URLs - Both sheets
+  const SCRIPT_URL_1 =
     "https://script.google.com/macros/s/AKfycbzh6CI81wQntNR6snBZxiYjcQTgr98ENMo-vzByupGCPgAM61UjHEadHTTv179Xae1z/exec";
+  
+  const SCRIPT_URL_2 =
+    "https://script.google.com/macros/s/AKfycbw2l3aJ7sO6DckEDBQCwiCffIUFG19VqpqkiXZ294V7OY2wl2ZxW0-eS9j9yshhU-vs/exec";
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -34,6 +37,54 @@ const Contact = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  // Function to submit to a single script URL
+  const submitToScript = async (scriptUrl, scriptName) => {
+    try {
+      console.log(`Submitting to ${scriptName}:`, formData);
+
+      // Try POST request first
+      const response = await fetch(scriptUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      console.log(`${scriptName} POST completed`);
+      return { success: true, method: 'POST' };
+    } catch (error) {
+      console.error(`${scriptName} POST failed:`, error);
+
+      // If POST fails, try GET method as fallback
+      try {
+        console.log(`${scriptName} trying GET method...`);
+
+        const params = new URLSearchParams({
+          teamName: formData.teamName,
+          leadName: formData.leadName,
+          email: formData.email,
+          phone: formData.phone || "",
+          teamSize: formData.teamSize,
+          experience: formData.experience || "",
+          skills: formData.skills || "",
+        });
+
+        const getResponse = await fetch(`${scriptUrl}?${params.toString()}`, {
+          method: "GET",
+          mode: "no-cors",
+        });
+
+        console.log(`${scriptName} GET completed`);
+        return { success: true, method: 'GET' };
+      } catch (fallbackError) {
+        console.error(`${scriptName} both POST and GET failed:`, fallbackError);
+        return { success: false, error: fallbackError };
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -66,58 +117,20 @@ const Contact = () => {
         throw new Error("Please enter a valid email address");
       }
 
-      console.log("Submitting data:", formData); // Debug log
+      // Submit to both scripts simultaneously
+      const [result1, result2] = await Promise.allSettled([
+        submitToScript(SCRIPT_URL_1, "Sheet 1"),
+        submitToScript(SCRIPT_URL_2, "Sheet 2")
+      ]);
 
-      // Try POST request first
-      const response = await fetch(SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      // Check results
+      const sheet1Success = result1.status === 'fulfilled' && result1.value.success;
+      const sheet2Success = result2.status === 'fulfilled' && result2.value.success;
 
-      // Since we're using no-cors, we can't read the response
-      // If no error is thrown, assume success
-      setMessage("✅ Team registered successfully!");
-      setMessageType("success");
-
-      // Reset form on success
-      setFormData({
-        teamName: "",
-        leadName: "",
-        email: "",
-        phone: "",
-        teamSize: "",
-        experience: "",
-        skills: "",
-      });
-    } catch (error) {
-      console.error("Submission error:", error);
-
-      // If POST fails, try GET method as fallback
-      try {
-        console.log("POST failed, trying GET method...");
-
-        const params = new URLSearchParams({
-          teamName: formData.teamName,
-          leadName: formData.leadName,
-          email: formData.email,
-          phone: formData.phone || "",
-          teamSize: formData.teamSize,
-          experience: formData.experience || "",
-          skills: formData.skills || "",
-        });
-
-        const getResponse = await fetch(`${SCRIPT_URL}?${params.toString()}`, {
-          method: "GET",
-          mode: "no-cors",
-        });
-
-        setMessage("✅ Team registered successfully!");
+      if (sheet1Success && sheet2Success) {
+        setMessage("✅ Team registered");
         setMessageType("success");
-
+        
         // Reset form on success
         setFormData({
           teamName: "",
@@ -128,13 +141,21 @@ const Contact = () => {
           experience: "",
           skills: "",
         });
-      } catch (fallbackError) {
-        console.error("Both POST and GET failed:", fallbackError);
-        setMessage(
-          "❌ Registration failed. Please check your internet connection and try again."
-        );
+      } else if (sheet1Success || sheet2Success) {
+        // Partial success
+        const successCount = (sheet1Success ? 1 : 0) + (sheet2Success ? 1 : 0);
+        setMessage(`⚠️ Team registered.`);
+        setMessageType("error");
+      } else {
+        // Both failed
+        setMessage("❌ Registration failed. Please check your internet connection and try again.");
         setMessageType("error");
       }
+
+    } catch (error) {
+      console.error("Validation error:", error);
+      setMessage(`❌ ${error.message}`);
+      setMessageType("error");
     } finally {
       setIsSubmitting(false);
     }
@@ -321,7 +342,6 @@ const Contact = () => {
           </div>
 
           {/* Contact Information */}
-
           <div className="mt-12 text-center">
             <p className="text-cyan-400 mb-4 text-lg font-semibold">
               Need Help? Contact Us
