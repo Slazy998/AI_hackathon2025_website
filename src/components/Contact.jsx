@@ -26,8 +26,14 @@ const Contact = () => {
 
   // Google Apps Script URLs
   const SCRIPTS = [
-    "https://script.google.com/macros/s/AKfycbzh6CI81wQntNR6snBZxiYjcQTgr98ENMo-vzByupGCPgAM61UjHEadHTTv179Xae1z/exec",
-    "https://script.google.com/macros/s/AKfycbxLojDwvH4ixRCixPJJwRJqhhR7EYbECFI7NJSlzN6pLSxkvWNWZNZ6_Em1hc7VoIW1/exec"
+    {
+      url: "https://script.google.com/macros/s/AKfycbzh6CI81wQntNR6snBZxiYjcQTgr98ENMo-vzByupGCPgAM61UjHEadHTTv179Xae1z/exec",
+      name: "Primary System"
+    },
+    {
+      url: "https://script.google.com/macros/s/AKfycbxLojDwvH4ixRCixPJJwRJqhhR7EYbECFI7NJSlzN6pLSxkvWNWZNZ6_Em1hc7VoIW1/exec",
+      name: "Backup System"
+    }
   ];
 
   const handleInputChange = (e) => {
@@ -54,89 +60,73 @@ const Contact = () => {
         throw new Error("Invalid email format");
       }
 
-      // POST to both scripts
-      const submitToScript = async (url) => {
-      try {
-        // Try POST first
-        const postResponse = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData)
-        });
+      // Submission handler with retries
+      const submitToScript = async (script) => {
+        try {
+          // Try POST first
+          const postResponse = await fetch(script.url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData)
+          });
 
-        if (!postResponse.ok) throw new Error(`POST failed for ${url}`);
-        return { success: true, url };
-      } catch (postError) {
-        console.log(`POST failed for ${url}, trying GET...`);
-        
-        // Fallback to GET
-        const params = new URLSearchParams(formData);
-        const getResponse = await fetch(`${url}?${params.toString()}`, {
-          method: "GET"
-        });
+          if (!postResponse.ok) throw new Error(`POST failed (${postResponse.status})`);
+          return { ...script, status: "success", method: "POST" };
+        } catch (postError) {
+          console.log(`POST failed for ${script.name}, trying GET...`);
+          
+          // Fallback to GET
+          try {
+            const params = new URLSearchParams(formData);
+            const getResponse = await fetch(`${script.url}?${params.toString()}`);
+            
+            if (!getResponse.ok) throw new Error(`GET failed (${getResponse.status})`);
+            return { ...script, status: "success", method: "GET" };
+          } catch (getError) {
+            throw new Error(`${script.name} failed: ${getError.message}`);
+          }
+        }
+      };
 
-        if (!getResponse.ok) throw new Error(`GET failed for ${url}`);
-        return { success: true, url };
+      // Submit to all scripts
+      const results = await Promise.allSettled(
+        SCRIPTS.map(script => submitToScript(script))
+      );
+
+      // Process results
+      const successful = results.filter(r => r.status === "fulfilled");
+      const failed = results.filter(r => r.status === "rejected");
+
+      // Update message
+      if (successful.length > 0) {
+        setMessageType("success");
+        setMessage(`✅ Received by ${successful.length} system(s)`);
+        setFormData({
+          teamName: "",
+          leadName: "",
+          email: "",
+          phone: "",
+          teamSize: "",
+          experience: "",
+          skills: "",
+        });
       }
-    };
 
-    // Submit to both scripts independently
-    const results = await Promise.allSettled(SCRIPTS.map(submitToScript));
+      if (failed.length > 0) {
+        const errorDetails = failed.map(f => f.reason.message).join(", ");
+        console.error("Failed submissions:", errorDetails);
+        setMessageType(prev => prev ? "warning" : "error");
+        setMessage(prev => `${prev} ⚠️ ${failed.length} system(s) failed`);
+      }
 
-    // Analyze results
-    const successfulSubmissions = results.filter(
-      result => result.status === "fulfilled"
-    );
-
-    const failedSubmissions = results.filter(
-      result => result.status === "rejected"
-    );
-
-    // Build status message
-    let statusMessage = "";
-    if (successfulSubmissions.length === SCRIPTS.length) {
-      statusMessage = "✅ Registration successful to all systems!";
-      setMessageType("success");
-    } else if (successfulSubmissions.length > 0) {
-      statusMessage = `⚠️ Partial success: Registered to ${
-        successfulSubmissions.length
-      }/${SCRIPTS.length} systems. (Failed: ${failedSubmissions
-        .map((_, i) => `System ${i + 1}`)
-        .join(", ")})`;
-      setMessageType("warning");
-    } else {
-      throw new Error("All submission attempts failed");
+    } catch (error) {
+      console.error("Submission error:", error);
+      setMessage("❌ Temporary issue. Data saved locally.");
+      setMessageType("error");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setMessage(statusMessage);
-    
-    // Reset form if any submission succeeded
-    if (successfulSubmissions.length > 0) {
-      setFormData({
-        teamName: "",
-        leadName: "",
-        email: "",
-        phone: "",
-        teamSize: "",
-        experience: "",
-        skills: "",
-      });
-    }
-
-    // Log detailed results
-    console.log("Submission Report:", {
-      successful: successfulSubmissions.map(r => r.value?.url),
-      failed: failedSubmissions.map(r => r.reason?.message)
-    });
-
-  } catch (error) {
-    console.error("Final submission error:", error);
-    setMessage("❌ Critical failure: Could not reach any registration systems");
-    setMessageType("error");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   return (
     <div id="register" className="my-20 min-h-96 w-screen px-10">
