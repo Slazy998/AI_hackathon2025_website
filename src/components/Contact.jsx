@@ -5,7 +5,7 @@ import { FaLinkedin, FaYoutube, FaInstagram } from "react-icons/fa";
 
 const ImageClipBox = ({ src, clipClass }) => (
   <div className={clipClass}>
-    <img src={src} />
+    <img src={src} alt="decoration" />
   </div>
 );
 
@@ -22,18 +22,17 @@ const Contact = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState(""); // 'success' or 'error'
+  const [messageType, setMessageType] = useState("");
 
-  // Google Apps Script web app URL
-  const SCRIPT_URL =
-    "https://script.google.com/macros/s/AKfycbzh6CI81wQntNR6snBZxiYjcQTgr98ENMo-vzByupGCPgAM61UjHEadHTTv179Xae1z/exec";
-const SCRIPT_URL1="https://script.google.com/macros/s/AKfycbxLojDwvH4ixRCixPJJwRJqhhR7EYbECFI7NJSlzN6pLSxkvWNWZNZ6_Em1hc7VoIW1/exec";
+  // Google Apps Script URLs
+  const SCRIPTS = [
+    "https://script.google.com/macros/s/AKfycbzh6CI81wQntNR6snBZxiYjcQTgr98ENMo-vzByupGCPgAM61UjHEadHTTv179Xae1z/exec",
+    "https://script.google.com/macros/s/AKfycbxLojDwvH4ixRCixPJJwRJqhhR7EYbECFI7NJSlzN6pLSxkvWNWZNZ6_Em1hc7VoIW1/exec"
+  ];
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -43,55 +42,36 @@ const SCRIPT_URL1="https://script.google.com/macros/s/AKfycbxLojDwvH4ixRCixPJJwR
     setMessageType("");
 
     try {
-      // Validate required fields
-      const requiredFields = [
-        "teamName",
-        "leadName",
-        "email",
-        "phone",
-        "teamSize",
-        "experience",
-      ];
-      const missingFields = requiredFields.filter(
-        (field) => !formData[field]?.trim()
+      // Validation
+      const requiredFields = ["teamName", "leadName", "email", "phone", "teamSize", "experience"];
+      const missingFields = requiredFields.filter(field => !formData[field]?.trim());
+      
+      if (missingFields.length > 0) {
+        throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        throw new Error("Invalid email format");
+      }
+
+      // POST to both scripts
+      const postPromises = SCRIPTS.map(url => 
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        })
       );
 
-      if (missingFields.length > 0) {
-        throw new Error(`Please fill in: ${missingFields.join(", ")}`);
+      const postResponses = await Promise.all(postPromises);
+      const allPostsSuccessful = postResponses.every(res => res.ok);
+      
+      if (!allPostsSuccessful) {
+        throw new Error("Some POST submissions failed");
       }
 
-      // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        throw new Error("Please enter a valid email address");
-      }
-
-      console.log("Submitting data:", formData); // Debug log
-
-      // Try POST request first
-      const response = await fetch(SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      const response = await fetch(SCRIPT_URL1, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      // Since we're using no-cors, we can't read the response
-      // If no error is thrown, assume success
       setMessage("✅ Team registered successfully!");
       setMessageType("success");
-
-      // Reset form on success
       setFormData({
         teamName: "",
         leadName: "",
@@ -101,36 +81,20 @@ const SCRIPT_URL1="https://script.google.com/macros/s/AKfycbxLojDwvH4ixRCixPJJwR
         experience: "",
         skills: "",
       });
+
     } catch (error) {
-      console.error("Submission error:", error);
-
-      // If POST fails, try GET method as fallback
+      console.error("Primary submission error:", error);
+      
       try {
-        console.log("POST failed, trying GET method...");
+        // Fallback to GET
+        const params = new URLSearchParams(formData);
+        const getPromises = SCRIPTS.map(url => 
+          fetch(`${url}?${params.toString()}`, { method: "GET" })
+        );
 
-        const params = new URLSearchParams({
-          teamName: formData.teamName,
-          leadName: formData.leadName,
-          email: formData.email,
-          phone: formData.phone || "",
-          teamSize: formData.teamSize,
-          experience: formData.experience || "",
-          skills: formData.skills || "",
-        });
-
-        const getResponse = await fetch(`${SCRIPT_URL}?${params.toString()}`, {
-          method: "GET",
-          mode: "no-cors",
-        });
-const getResponse = await fetch(`${SCRIPT_URL1}?${params.toString()}`, {
-          method: "GET",
-          mode: "no-cors",
-        });
-
+        await Promise.all(getPromises);
         setMessage("✅ Team registered successfully!");
         setMessageType("success");
-
-        // Reset form on success
         setFormData({
           teamName: "",
           leadName: "",
@@ -140,11 +104,10 @@ const getResponse = await fetch(`${SCRIPT_URL1}?${params.toString()}`, {
           experience: "",
           skills: "",
         });
+
       } catch (fallbackError) {
-        console.error("Both POST and GET failed:", fallbackError);
-        setMessage(
-          "❌ Registration failed. Please check your internet connection and try again."
-        );
+        console.error("Fallback submission failed:", fallbackError);
+        setMessage("❌ Registration failed. Please try again later.");
         setMessageType("error");
       }
     } finally {
