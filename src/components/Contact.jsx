@@ -27,7 +27,7 @@ const Contact = () => {
   // Google Apps Script web app URL
   const SCRIPT_URL =
     "https://script.google.com/macros/s/AKfycbzh6CI81wQntNR6snBZxiYjcQTgr98ENMo-vzByupGCPgAM61UjHEadHTTv179Xae1z/exec";
-
+const SCRIPT_URL1="https://script.google.com/macros/s/AKfycbxLojDwvH4ixRCixPJJwRJqhhR7EYbECFI7NJSlzN6pLSxkvWNWZNZ6_Em1hc7VoIW1/exec";
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -77,6 +77,14 @@ const Contact = () => {
         },
         body: JSON.stringify(formData),
       });
+      const response = await fetch(SCRIPT_URL1, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
       // Since we're using no-cors, we can't read the response
       // If no error is thrown, assume success
@@ -111,6 +119,10 @@ const Contact = () => {
         });
 
         const getResponse = await fetch(`${SCRIPT_URL}?${params.toString()}`, {
+          method: "GET",
+          mode: "no-cors",
+        });
+const getResponse = await fetch(`${SCRIPT_URL1}?${params.toString()}`, {
           method: "GET",
           mode: "no-cors",
         });
