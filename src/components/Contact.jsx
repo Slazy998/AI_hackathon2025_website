@@ -1,7 +1,19 @@
 import { useState } from "react";
-import AnimatedTitle from "./AnimatedTitle";
-import Button from "./Button";
 import { FaLinkedin, FaYoutube, FaInstagram } from "react-icons/fa";
+
+// Simple AnimatedTitle component (since it's not defined)
+const AnimatedTitle = ({ title, className }) => (
+  <div className={className}>
+    <h1 dangerouslySetInnerHTML={{ __html: title }} />
+  </div>
+);
+
+// Simple Button component (since it's not defined)
+const Button = ({ title, containerClass, ...props }) => (
+  <button className={containerClass} {...props}>
+    {title}
+  </button>
+);
 
 const ImageClipBox = ({ src, clipClass }) => (
   <div className={clipClass}>
@@ -66,8 +78,12 @@ const Contact = () => {
           // Try POST first
           const postResponse = await fetch(script.url, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData)
+            headers: { 
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify(formData),
+            mode: 'cors'
           });
 
           if (!postResponse.ok) throw new Error(`POST failed (${postResponse.status})`);
@@ -78,7 +94,10 @@ const Contact = () => {
           // Fallback to GET
           try {
             const params = new URLSearchParams(formData);
-            const getResponse = await fetch(`${script.url}?${params.toString()}`);
+            const getResponse = await fetch(`${script.url}?${params.toString()}`, {
+              method: "GET",
+              mode: 'cors'
+            });
             
             if (!getResponse.ok) throw new Error(`GET failed (${getResponse.status})`);
             return { ...script, status: "success", method: "GET" };
@@ -121,7 +140,7 @@ const Contact = () => {
 
     } catch (error) {
       console.error("Submission error:", error);
-      setMessage("❌ Temporary issue. Data saved locally.");
+      setMessage("❌ Temporary issue. Please try again.");
       setMessageType("error");
     } finally {
       setIsSubmitting(false);
@@ -157,7 +176,7 @@ const Contact = () => {
 
           <AnimatedTitle
             title="let&#39;s b<b>u</b>ild the <br /> future of <br /> <b>A</b>I t<b>o</b>gether."
-            className="special-font !md:text-[6.2rem] w-full font-zentry !text-5xl !font-black !leading-[.9] mb-10"
+            className="special-font md:text-6xl w-full font-bold text-5xl leading-tight mb-10"
           />
 
           {/* Registration Form */}
@@ -166,7 +185,7 @@ const Contact = () => {
               Team Registration
             </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-cyan-400 mb-2">
@@ -289,6 +308,8 @@ const Contact = () => {
                   className={`p-4 rounded-lg text-center ${
                     messageType === "success"
                       ? "bg-green-900/50 text-green-300 border border-green-400/30"
+                      : messageType === "warning"
+                      ? "bg-yellow-900/50 text-yellow-300 border border-yellow-400/30"
                       : "bg-red-900/50 text-red-300 border border-red-400/30"
                   }`}
                 >
@@ -298,43 +319,43 @@ const Contact = () => {
 
               <div className="text-center">
                 <Button
-                  type="submit"
+                  onClick={handleSubmit}
                   title={isSubmitting ? "Registering..." : "Register Team"}
+                  disabled={isSubmitting}
                   containerClass={`mt-6 cursor-pointer bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 px-8 py-3 rounded-full font-bold text-white transition-all duration-300 transform hover:scale-105 ${
                     isSubmitting ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 />
               </div>
-            </form>
+            </div>
           </div>
 
           {/* Contact Information */}
-
           <div className="mt-12 text-center">
             <p className="text-cyan-400 mb-4 text-lg font-semibold">
               Need Help? Contact Us
             </p>
             <div className="flex flex-wrap justify-center gap-6 text-sm">
               {/* Instagram Section */}
-              <div className="flex flex-col items-center bg-grey-50 p-4 rounded-lg shadow-md">
-                <span ><FaInstagram color="purple"/></span>
+              <div className="flex flex-col items-center bg-gray-800/50 p-4 rounded-lg shadow-md">
+                <span className="mb-2"><FaInstagram size={24} color="purple"/></span>
                 <p className="text-cyan-500 font-medium">Instagram</p>
-                <span>@dr.sindhutaisapkal.maai</span>
-                <span>@themotherglobalfoundation</span>
+                <span className="text-center">@dr.sindhutaisapkal.maai</span>
+                <span className="text-center">@themotherglobalfoundation</span>
               </div>
 
               {/* YouTube Section */}
-              <div className="flex flex-col items-center bg-grey-50 p-4 rounded-lg shadow-md">
-                <span ><FaYoutube color="red"/></span>
+              <div className="flex flex-col items-center bg-gray-800/50 p-4 rounded-lg shadow-md">
+                <span className="mb-2"><FaYoutube size={24} color="red"/></span>
                 <p className="text-purple-500 font-medium">YouTube</p>
-                <span>@themotherglobalfoundation</span>
+                <span className="text-center">@themotherglobalfoundation</span>
               </div>
 
               {/* LinkedIn Section */}
-              <div className="flex flex-col items-center bg-hrey-50 p-4 rounded-lg shadow-md">
-                <span ><FaLinkedin color="darkblue"/></span>
+              <div className="flex flex-col items-center bg-gray-800/50 p-4 rounded-lg shadow-md">
+                <span className="mb-2"><FaLinkedin size={24} color="darkblue"/></span>
                 <p className="text-orange-500 font-medium">LinkedIn</p>
-                <span>The Mother Global Foundation on LinkedIn</span>
+                <span className="text-center">The Mother Global Foundation on LinkedIn</span>
               </div>
             </div>
           </div>
