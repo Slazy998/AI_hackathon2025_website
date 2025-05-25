@@ -11,12 +11,6 @@ const Footer = () => {
       icon: <FaLinkedin className="w-5 h-5" />,
       color: "hover:text-blue-600"
     },
-    { 
-      name: "YouTube",
-      href: "https://www.youtube.com/@Dzheen", 
-      icon: <FaYoutube className="w-5 h-5" />,
-      color: "hover:text-red-600"
-    },
   ];
 
   const toggleSocialLinks = () => {
