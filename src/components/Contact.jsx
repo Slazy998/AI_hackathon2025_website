@@ -340,39 +340,10 @@ const Contact = () => {
               </div>
             </form>
           </div>
-
-          {/* Contact Information */}
-          <div className="mt-12 text-center">
-            <p className="text-cyan-400 mb-4 text-lg font-semibold">
-              Need Help? Contact Us
-            </p>
-            <div className="flex flex-wrap justify-center gap-6 text-sm">
-              {/* Instagram Section */}
-              <div className="flex flex-col items-center bg-grey-50 p-4 rounded-lg shadow-md">
-                <span ><FaInstagram color="purple"/></span>
-                <p className="text-cyan-500 font-medium">Instagram</p>
-                <span>@dr.sindhutaisapkal.maai</span>
-                <span>@themotherglobalfoundation</span>
-              </div>
-
-              {/* YouTube Section */}
-              <div className="flex flex-col items-center bg-grey-50 p-4 rounded-lg shadow-md">
-                <span ><FaYoutube color="red"/></span>
-                <p className="text-purple-500 font-medium">YouTube</p>
-                <span>@themotherglobalfoundation</span>
-              </div>
-
-              {/* LinkedIn Section */}
-              <div className="flex flex-col items-center bg-hrey-50 p-4 rounded-lg shadow-md">
-                <span ><FaLinkedin color="darkblue"/></span>
-                <p className="text-orange-500 font-medium">LinkedIn</p>
-                <span>The Mother Global Foundation on LinkedIn</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
-    </div>
+
   );
 };
 
