@@ -26,7 +26,7 @@ const Contact = () => {
 
   // Google Apps Script web app URLs - Both sheets
   const SCRIPT_URL_1 =
-    "https://script.google.com/macros/s/AKfycbzh6CI81wQntNR6snBZxiYjcQTgr98ENMo-vzByupGCPgAM61UjHEadHTTv179Xae1z/exec";
+    "https://script.google.com/macros/s/AKfycbzX1twygqwzaBeqPCMvlzk3Gvh5OhCCagAoL2qoKbV4miRCu8q-gsKTw6D4Fxefik_s/exec";
   
   const SCRIPT_URL_2 =
     "https://script.google.com/macros/s/AKfycbw2l3aJ7sO6DckEDBQCwiCffIUFG19VqpqkiXZ294V7OY2wl2ZxW0-eS9j9yshhU-vs/exec";
